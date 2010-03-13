@@ -1,4 +1,4 @@
-package eu.linesofcode.taggerbot;
+package eu.linesofcode.taggerbot.activity;
 
 import android.location.Location;
 import android.location.LocationListener;
@@ -12,6 +12,8 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 
+import eu.linesofcode.taggerbot.Logger;
+import eu.linesofcode.taggerbot.R;
 import eu.linesofcode.taggerbot.client.TaggerClient;
 import eu.linesofcode.taggerbot.client.TaggerClientException;
 import eu.linesofcode.taggerbot.client.data.EStatus;
