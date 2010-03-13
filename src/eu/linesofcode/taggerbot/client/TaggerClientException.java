@@ -1,5 +1,7 @@
 package eu.linesofcode.taggerbot.client;
 
+import java.io.IOException;
+
 /**
  * Generic exception class for Tagger client errors.
  * 
@@ -22,6 +24,16 @@ public class TaggerClientException extends RuntimeException {
 
     public TaggerClientException(Throwable cause) {
         super(cause);
+    }
+
+    /**
+     * Returns true, if the exception was caused by a network error.
+     * 
+     * @return True, if network caused error.
+     */
+    public boolean isNetworkError() {
+        Throwable cause = getCause();
+        return (cause != null) && (cause instanceof IOException);
     }
 
 }

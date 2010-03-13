@@ -72,7 +72,7 @@ public class TaggerClient {
             String content = readEntity(entity);
             result = (T) TaggerXml.xml().fromXML(content);
         } catch (IOException e) {
-            throw new TaggerClientException(e);
+            throw new TaggerClientException("Communication error!", e);
         }
         return result;
     }

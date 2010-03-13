@@ -22,6 +22,26 @@ public class Logger {
         Log.d(APP_TAG, message);
     }
 
+    /**
+     * Logs a warning message.
+     * 
+     * @param string
+     *            Message text.
+     */
+    public static void w(String message) {
+        Log.w(APP_TAG, message);
+    }
+
+    /**
+     * Logs an error.
+     * 
+     * @param string
+     *            Error message text.
+     */
+    public static void e(String message) {
+        Log.e(APP_TAG, message);
+    }
+
     private Logger() {
     }
 }
