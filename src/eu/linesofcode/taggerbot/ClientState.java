@@ -1,5 +1,11 @@
 package eu.linesofcode.taggerbot;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import android.location.Location;
 import eu.linesofcode.taggerbot.client.TaggerClient;
 import eu.linesofcode.taggerbot.client.TaggerClientException;
@@ -19,10 +25,13 @@ public class ClientState {
         return instance;
     }
 
+    ExecutorService notifier = Executors.newSingleThreadExecutor();
     TaggerClient client = null;
     Location currentLocation = null;
     GpsState gpsState = GpsState.BAD;
     NetworkState networkState = NetworkState.ERROR;
+    List<ClientStateListener> listeners = Collections
+            .synchronizedList(new ArrayList<ClientStateListener>());
 
     private ClientState() {
     }
@@ -82,6 +91,27 @@ public class ClientState {
      */
     public void setGpsState(GpsState gpsState) {
         this.gpsState = gpsState;
+        fireGpsStateChanged(gpsState);
+    }
+
+    /**
+     * Notifies all listeners of the new GPS state.
+     * 
+     * @param newState
+     *            New state to notify.
+     */
+    private void fireGpsStateChanged(final GpsState newState) {
+        final List<ClientStateListener> listenerCopy = new ArrayList<ClientStateListener>(
+                listeners);
+        notifier.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                for (ClientStateListener listener : listenerCopy) {
+                    listener.gpsStateChanged(newState);
+                }
+            }
+        });
     }
 
     /**
@@ -97,6 +127,35 @@ public class ClientState {
      */
     public void setNetworkState(NetworkState networkState) {
         this.networkState = networkState;
+        fireNetworkStateChanged(networkState);
+    }
+
+    /**
+     * Notifies all listeners, that the network state has changed.
+     * 
+     * @param newState
+     *            State to notify.
+     */
+    private void fireNetworkStateChanged(final NetworkState newState) {
+        final List<ClientStateListener> listenerCopy = new ArrayList<ClientStateListener>(
+                listeners);
+        notifier.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                for (ClientStateListener listener : listenerCopy) {
+                    listener.networkStateChanged(newState);
+                }
+            }
+        });
+    }
+
+    public void addClientStateListener(ClientStateListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeClientStateListener(ClientStateListener listener) {
+        listeners.remove(listener);
     }
 
 }

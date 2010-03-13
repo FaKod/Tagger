@@ -10,9 +10,20 @@
         android:clickable="true"
         android:apiKey="0aUe-PyfHuQXq32tz_iH1rU7zhaqt_kwy372eNQ" />
     <LinearLayout
-        android:id="@+id/zoomview"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@id/mapview"
-        android:layout_centerHorizontal="true" />
+        android:layout_width="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:background="#90FFFFFF">
+        <ImageView
+            android:id="@+id/gpsIndicator"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@drawable/gps_bad" />
+        <ImageView
+            android:id="@+id/networkIndicator"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@drawable/network_error" />
+    </LinearLayout>
 </RelativeLayout>

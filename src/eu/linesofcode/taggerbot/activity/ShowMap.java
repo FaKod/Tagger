@@ -3,31 +3,32 @@ package eu.linesofcode.taggerbot.activity;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.widget.ImageView;
 
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 
+import eu.linesofcode.taggerbot.ClientState;
+import eu.linesofcode.taggerbot.ClientStateListener;
+import eu.linesofcode.taggerbot.GpsState;
 import eu.linesofcode.taggerbot.Logger;
+import eu.linesofcode.taggerbot.NetworkState;
 import eu.linesofcode.taggerbot.R;
-import eu.linesofcode.taggerbot.client.TaggerClient;
-import eu.linesofcode.taggerbot.client.TaggerClientException;
-import eu.linesofcode.taggerbot.client.data.EStatus;
-import eu.linesofcode.taggerbot.client.data.EStatusReturn;
-import eu.linesofcode.taggerbot.client.data.LocationType;
-import eu.linesofcode.taggerbot.client.data.Tlocation;
-import eu.linesofcode.taggerbot.client.data.Tuser;
 
 public class ShowMap extends MapActivity {
 
+    private static final int REQUIRED_ACCURACY = 10;
+
+    private ImageView gpsIndicator;
+    private ImageView networkIndicator;
     private MapView mapView;
     private MyLocationOverlay locationOverlay;
-    private TaggerClient client = null;
     private TaggerLocationListener locationListener;
+    private ClientStateListener stateListener;
+    private LocationManager locMan;
 
     /** Called when the activity is first created. */
     @Override
@@ -35,6 +36,9 @@ public class ShowMap extends MapActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
+
+        gpsIndicator = (ImageView) findViewById(R.id.gpsIndicator);
+        networkIndicator = (ImageView) findViewById(R.id.networkIndicator);
 
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.setBuiltInZoomControls(true);
@@ -44,6 +48,40 @@ public class ShowMap extends MapActivity {
         mapView.getOverlays().add(locationOverlay);
 
         locationListener = new TaggerLocationListener();
+        locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        stateListener = new StateListener();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see com.google.android.maps.MapActivity#onResume()
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        ClientState.getState().addClientStateListener(stateListener);
+
+        locationOverlay.enableMyLocation();
+        locationOverlay.enableCompass();
+        locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 5,
+                locationListener);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see com.google.android.maps.MapActivity#onPause()
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        locationOverlay.disableMyLocation();
+        locationOverlay.disableCompass();
+        locMan.removeUpdates(locationListener);
+
+        ClientState.getState().removeClientStateListener(stateListener);
     }
 
     /*
@@ -55,76 +93,7 @@ public class ShowMap extends MapActivity {
         return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater mInflater = getMenuInflater();
-        mInflater.inflate(R.menu.showmap, menu);
-        return true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-        case R.id.showGps:
-            toggleCurrentLocation();
-            return true;
-        case R.id.login:
-            if (client == null) {
-                client = new TaggerClient("FaKod", "password");
-                Tuser user = client.user().get();
-                Logger.d("Logged in as: " + user.getName());
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Toggles the location display on the map.
-     */
-    private void toggleCurrentLocation() {
-        if (locationOverlay.isMyLocationEnabled()) {
-            locationOverlay.disableMyLocation();
-            locationOverlay.disableCompass();
-            locationListener.stopListen();
-        } else {
-            locationOverlay.enableMyLocation();
-            locationOverlay.enableCompass();
-            locationListener.startListen();
-        }
-    }
-
     private class TaggerLocationListener implements LocationListener {
-
-        LocationManager locMan;
-
-        public TaggerLocationListener() {
-            locMan = (LocationManager) ShowMap.this
-                    .getSystemService(LOCATION_SERVICE);
-        }
-
-        /**
-         * 
-         */
-        public void stopListen() {
-            locMan.removeUpdates(this);
-        }
-
-        /**
-         * 
-         */
-        public void startListen() {
-            locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000,
-                    5, this);
-        }
 
         /*
          * (non-Javadoc)
@@ -134,21 +103,14 @@ public class ShowMap extends MapActivity {
          */
         @Override
         public void onLocationChanged(Location location) {
-            if (client != null) {
-                try {
-                    Tlocation loc = new Tlocation();
-                    loc.setLatitude(location.getLatitude());
-                    loc.setLongitude(location.getLongitude());
-                    loc.setLocationType(LocationType.MyLocation.toString());
-                    EStatus status = new EStatus();
-                    status.setLocation(loc);
-                    EStatusReturn result = client.status().update(status);
-                    Logger.d("Updated status: Dist: " + result.getDistance()
-                            + " Azi: " + result.getAzimuth());
-                } catch (TaggerClientException e) {
-                    Logger.d("Client error: " + e);
-                }
+            boolean accurate = location.hasAccuracy()
+                    && (location.getAccuracy() < REQUIRED_ACCURACY);
+            if (accurate) {
+                ClientState.getState().setGpsState(GpsState.OK);
+            } else {
+                ClientState.getState().setGpsState(GpsState.MEDIUM);
             }
+            ClientState.getState().setCurrentLocation(location);
         }
 
         /*
@@ -159,8 +121,7 @@ public class ShowMap extends MapActivity {
          */
         @Override
         public void onProviderDisabled(String provider) {
-            // TODO Auto-generated method stub
-
+            ClientState.getState().setGpsState(GpsState.BAD);
         }
 
         /*
@@ -170,8 +131,7 @@ public class ShowMap extends MapActivity {
          */
         @Override
         public void onProviderEnabled(String provider) {
-            // TODO Auto-generated method stub
-
+            ClientState.getState().setGpsState(GpsState.MEDIUM);
         }
 
         /*
@@ -182,8 +142,78 @@ public class ShowMap extends MapActivity {
          */
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            // TODO Auto-generated method stub
+            Logger.d("onStatusChanged(" + provider + ", " + status + ")");
+            switch (status) {
+            case LocationProvider.AVAILABLE:
+                ClientState.getState().setGpsState(GpsState.OK);
+                break;
+            case LocationProvider.TEMPORARILY_UNAVAILABLE:
+            case LocationProvider.OUT_OF_SERVICE:
+                ClientState.getState().setGpsState(GpsState.BAD);
+                break;
+            }
+        }
 
+    }
+
+    private class StateListener implements ClientStateListener {
+
+        /*
+         * (non-Javadoc)
+         * @seeeu.linesofcode.taggerbot.ClientStateListener#gpsStateChanged(eu.
+         * linesofcode.taggerbot.GpsState)
+         */
+        @Override
+        public void gpsStateChanged(final GpsState newState) {
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    Logger.d("New GPS state: " + newState);
+                    switch (newState) {
+                    case OK:
+                        gpsIndicator.setImageResource(R.drawable.gps_ok);
+                        break;
+                    case MEDIUM:
+                        gpsIndicator.setImageResource(R.drawable.gps_medium);
+                        break;
+                    case BAD:
+                        gpsIndicator.setImageResource(R.drawable.gps_bad);
+                        break;
+                    default:
+                        Logger.e("Unknown GPS state: " + newState);
+                    }
+                }
+            });
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * eu.linesofcode.taggerbot.ClientStateListener#networkStateChanged(
+         * eu.linesofcode.taggerbot.NetworkState)
+         */
+        @Override
+        public void networkStateChanged(final NetworkState newState) {
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    Logger.d("New network state: " + newState);
+                    switch (newState) {
+                    case OK:
+                        networkIndicator
+                                .setImageResource(R.drawable.network_ok);
+                        break;
+                    case ERROR:
+                        networkIndicator
+                                .setImageResource(R.drawable.network_error);
+                        break;
+                    default:
+                        Logger.e("Unknown network state: " + newState);
+                    }
+                }
+            });
         }
 
     }
