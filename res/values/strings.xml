@@ -16,6 +16,7 @@
     <string name="prefs_login_user_key">login.user</string>
     <string name="prefs_login_user_summary">Your username on the Tagger server.</string>
     <string name="settings">Settings</string>
+    <string name="showmap_menu_satellite">Toggle Satellite</string>
     <string name="showmap_menu_showprefs">Settings</string>
     <string name="showmap_toast_loginfail">Login failed! Please check your login data.</string>
 </resources>

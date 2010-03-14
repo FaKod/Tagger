@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
@@ -47,6 +48,7 @@ public class ShowMap extends MapActivity {
     private ClientStateListener stateListener;
     private LocationManager locMan;
     private ExecutorService worker = Executors.newSingleThreadExecutor();
+    private boolean showSatImages = true;
 
     /** Called when the activity is first created. */
     @Override
@@ -65,7 +67,7 @@ public class ShowMap extends MapActivity {
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.setBuiltInZoomControls(true);
 
-        mapView.setSatellite(true);
+        mapView.setSatellite(showSatImages);
         locationOverlay = new MyLocationOverlay(this, mapView);
         mapView.getOverlays().add(locationOverlay);
 
@@ -168,6 +170,10 @@ public class ShowMap extends MapActivity {
         case R.id.showprefs:
             startActivity(new Intent(this, Settings.class));
             return true;
+        case R.id.togglesatellite:
+            showSatImages = !showSatImages;
+            mapView.setSatellite(showSatImages);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -208,6 +214,7 @@ public class ShowMap extends MapActivity {
          */
         @Override
         public void onLocationChanged(Location location) {
+            mapView.getController().animateTo(getGeoPoint(location));
             boolean accurate = location.hasAccuracy()
                     && (location.getAccuracy() < REQUIRED_ACCURACY);
             if (accurate) {
@@ -216,6 +223,19 @@ public class ShowMap extends MapActivity {
                 ClientState.getState().setGpsState(GpsState.MEDIUM);
             }
             ClientState.getState().setCurrentLocation(location);
+        }
+
+        /**
+         * Creates a {@link GeoPoint} containing the provided {@link Location}.
+         * 
+         * @param location
+         *            Location to convert.
+         * @return GeoPoint that points to the same location.
+         */
+        private GeoPoint getGeoPoint(Location location) {
+            int latitude = (int) (location.getLatitude() * 1E6);
+            int longitude = (int) (location.getLongitude() * 1E6);
+            return new GeoPoint(latitude, longitude);
         }
 
         /*
