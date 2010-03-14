@@ -39,6 +39,12 @@ public class ShowMap extends MapActivity {
      */
     private static final int REQUIRED_ACCURACY = 10;
 
+    /**
+     * GPS update rate (milliseconds). Note that this is maximum update rate and
+     * not a fixed rate!
+     */
+    private static final int GPS_INTERVAL = 5000;
+
     private static final int DIALOG_LOGINWARNING = 100;
 
     private ImageView gpsIndicator;
@@ -76,7 +82,7 @@ public class ShowMap extends MapActivity {
         locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         stateListener = new StateListener();
-        
+
         Intent updaterIntent = new Intent(this, LocationUpdateService.class);
         startService(updaterIntent);
     }
@@ -93,8 +99,8 @@ public class ShowMap extends MapActivity {
 
         locationOverlay.enableMyLocation();
         locationOverlay.enableCompass();
-        locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 5,
-                locationListener);
+        locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                GPS_INTERVAL, 5, locationListener);
 
         if (!ClientState.getState().isConnected()) {
             worker.submit(new Runnable() {

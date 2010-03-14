@@ -40,7 +40,7 @@ public class LocationUpdateService extends Service {
     /**
      * Time between location updated (seconds).
      */
-    private static final int UPDATE_INTERVAL = 10;
+    private static final int UPDATE_INTERVAL = 12;
 
     private ScheduledExecutorService worker;
     private NotificationManager notifyMan;
