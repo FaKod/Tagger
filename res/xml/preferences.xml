@@ -7,10 +7,13 @@
         <EditTextPreference
             android:summary="@string/prefs_login_user_summary"
             android:title="@string/prefs_login_user"
-            android:key="login.user" />
+            android:key="login.user"
+            android:singleLine="true" />
         <EditTextPreference
             android:key="login.password"
             android:summary="@string/prefs_login_password_summary"
-            android:title="@string/prefs_login_password" />
+            android:title="@string/prefs_login_password"
+            android:singleLine="true"
+            android:password="true" />
     </PreferenceCategory>
 </PreferenceScreen>
