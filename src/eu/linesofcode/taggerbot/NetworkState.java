@@ -13,5 +13,9 @@ public enum NetworkState {
     /**
      * Last request to server was interrupted by a network error.
      */
-    ERROR
+    ERROR,
+    /**
+     * Network connection is deliberately down.
+     */
+    OFFLINE
 }
