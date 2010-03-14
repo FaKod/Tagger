@@ -20,9 +20,12 @@
         <activity
             android:label="@string/settings"
             android:name=".activity.Settings" />
+        <service
+            android:name=".service.LocationUpdateService" />
         <uses-library
             android:name="com.google.android.maps" />
-    </application>
+    
+</application>
     <uses-sdk
         android:minSdkVersion="4" />
 

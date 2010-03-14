@@ -49,7 +49,7 @@ public class ClientState {
 
             @Override
             public boolean run(TaggerClient client) {
-                client = new TaggerClient(username, password);
+                ClientState.this.client = new TaggerClient(username, password);
                 Tuser user = client.user().get();
                 if (!user.getName().equals(username)) {
                     Logger

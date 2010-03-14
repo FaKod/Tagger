@@ -7,6 +7,7 @@
         Please do so in the settings activity reachable with the options menu.
     </string>
     <string name="dialog_login_button">Dismiss</string>
+    <string name="updateservice_error">Error while updating location on server! Check your network connection.</string>
     <string name="prefs_login">Login data</string>
     <string name="prefs_login_summary"></string>
     <string name="prefs_login_password">Password</string>
@@ -19,4 +20,5 @@
     <string name="showmap_menu_satellite">Toggle Satellite</string>
     <string name="showmap_menu_showprefs">Settings</string>
     <string name="showmap_toast_loginfail">Login failed! Please check your login data.</string>
+    <string name="statusbar_text">Updating Tagger location...</string>
 </resources>

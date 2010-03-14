@@ -30,6 +30,7 @@ import eu.linesofcode.taggerbot.Logger;
 import eu.linesofcode.taggerbot.NetworkState;
 import eu.linesofcode.taggerbot.Prefs;
 import eu.linesofcode.taggerbot.R;
+import eu.linesofcode.taggerbot.service.LocationUpdateService;
 
 public class ShowMap extends MapActivity {
 
@@ -75,6 +76,9 @@ public class ShowMap extends MapActivity {
         locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         stateListener = new StateListener();
+        
+        Intent updaterIntent = new Intent(this, LocationUpdateService.class);
+        startService(updaterIntent);
     }
 
     /*
@@ -137,6 +141,8 @@ public class ShowMap extends MapActivity {
     @Override
     protected void onDestroy() {
         worker.shutdown();
+        Intent updaterIntent = new Intent(this, LocationUpdateService.class);
+        stopService(updaterIntent);
         super.onDestroy();
     }
 
