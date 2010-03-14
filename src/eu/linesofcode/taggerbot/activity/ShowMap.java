@@ -1,11 +1,22 @@
 package eu.linesofcode.taggerbot.activity;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
@@ -16,11 +27,17 @@ import eu.linesofcode.taggerbot.ClientStateListener;
 import eu.linesofcode.taggerbot.GpsState;
 import eu.linesofcode.taggerbot.Logger;
 import eu.linesofcode.taggerbot.NetworkState;
+import eu.linesofcode.taggerbot.Prefs;
 import eu.linesofcode.taggerbot.R;
 
 public class ShowMap extends MapActivity {
 
+    /**
+     * Required accuracy for a "good" GPS signal (meters).
+     */
     private static final int REQUIRED_ACCURACY = 10;
+
+    private static final int DIALOG_LOGINWARNING = 100;
 
     private ImageView gpsIndicator;
     private ImageView networkIndicator;
@@ -29,6 +46,7 @@ public class ShowMap extends MapActivity {
     private TaggerLocationListener locationListener;
     private ClientStateListener stateListener;
     private LocationManager locMan;
+    private ExecutorService worker = Executors.newSingleThreadExecutor();
 
     /** Called when the activity is first created. */
     @Override
@@ -36,6 +54,10 @@ public class ShowMap extends MapActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
+
+        if (Prefs.get() == null) {
+            Prefs.init(this);
+        }
 
         gpsIndicator = (ImageView) findViewById(R.id.gpsIndicator);
         networkIndicator = (ImageView) findViewById(R.id.networkIndicator);
@@ -67,6 +89,28 @@ public class ShowMap extends MapActivity {
         locationOverlay.enableCompass();
         locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 5,
                 locationListener);
+
+        if (!ClientState.getState().isConnected()) {
+            worker.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    if (Prefs.get().getUser() == null) {
+                        showDialog(DIALOG_LOGINWARNING);
+                        ClientState.getState().setNetworkState(
+                                NetworkState.OFFLINE);
+                    } else {
+                        String user = Prefs.get().getUser();
+                        String password = Prefs.get().getPassword();
+                        if (!ClientState.getState().login(user, password)) {
+                            Toast.makeText(ShowMap.this,
+                                    R.string.showmap_toast_loginfail,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+            });
+        }
     }
 
     /*
@@ -86,11 +130,72 @@ public class ShowMap extends MapActivity {
 
     /*
      * (non-Javadoc)
+     * @see com.google.android.maps.MapActivity#onDestroy()
+     */
+    @Override
+    protected void onDestroy() {
+        worker.shutdown();
+        super.onDestroy();
+    }
+
+    /*
+     * (non-Javadoc)
      * @see com.google.android.maps.MapActivity#isRouteDisplayed()
      */
     @Override
     protected boolean isRouteDisplayed() {
         return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.showmenu, menu);
+        return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.showprefs:
+            startActivity(new Intent(this, Settings.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onCreateDialog(int)
+     */
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        AlertDialog dialog = null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        switch (id) {
+        case DIALOG_LOGINWARNING:
+            DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            };
+            dialog = builder.setTitle(R.string.dialog_login_title).setMessage(
+                    R.string.dialog_login_text).setPositiveButton(
+                    R.string.dialog_login_button, listener)
+                    .setCancelable(false).create();
+            break;
+        }
+        return dialog;
     }
 
     private class TaggerLocationListener implements LocationListener {
@@ -142,7 +247,6 @@ public class ShowMap extends MapActivity {
          */
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            Logger.d("onStatusChanged(" + provider + ", " + status + ")");
             switch (status) {
             case LocationProvider.AVAILABLE:
                 ClientState.getState().setGpsState(GpsState.OK);
@@ -169,7 +273,6 @@ public class ShowMap extends MapActivity {
 
                 @Override
                 public void run() {
-                    Logger.d("New GPS state: " + newState);
                     switch (newState) {
                     case OK:
                         gpsIndicator.setImageResource(R.drawable.gps_ok);
@@ -199,7 +302,6 @@ public class ShowMap extends MapActivity {
 
                 @Override
                 public void run() {
-                    Logger.d("New network state: " + newState);
                     switch (newState) {
                     case OK:
                         networkIndicator
@@ -208,6 +310,10 @@ public class ShowMap extends MapActivity {
                     case ERROR:
                         networkIndicator
                                 .setImageResource(R.drawable.network_error);
+                        break;
+                    case OFFLINE:
+                        networkIndicator
+                                .setImageResource(R.drawable.network_offline);
                         break;
                     default:
                         Logger.e("Unknown network state: " + newState);

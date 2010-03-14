@@ -29,7 +29,7 @@ public class ClientState {
     TaggerClient client = null;
     Location currentLocation = null;
     GpsState gpsState = GpsState.BAD;
-    NetworkState networkState = NetworkState.ERROR;
+    NetworkState networkState = NetworkState.OFFLINE;
     List<ClientStateListener> listeners = Collections
             .synchronizedList(new ArrayList<ClientStateListener>());
 
@@ -40,28 +40,31 @@ public class ClientState {
         return client != null;
     }
 
-    public boolean login(String username, String password) {
+    public boolean login(final String username, final String password) {
         if (isConnected()) {
             throw new IllegalStateException(
                     "Can't login when already connected!");
         }
-        boolean success = false;
-        try {
-            client = new TaggerClient(username, password);
-            Tuser user = client.user().get();
-            if (!user.getName().equals(username)) {
-                Logger.w("Username we got from server is different: Expected: "
-                        + username + " Actual: " + user.getName());
+        ClientTask task = new ClientTask() {
+
+            @Override
+            public boolean run(TaggerClient client) {
+                client = new TaggerClient(username, password);
+                Tuser user = client.user().get();
+                if (!user.getName().equals(username)) {
+                    Logger
+                            .w("Username we got from server is different: Expected: "
+                                    + username + " Actual: " + user.getName());
+                }
+                return true;
             }
-            success = true;
-        } catch (TaggerClientException e) {
-            Logger.e("Error while login: " + e);
-        }
-        return success;
+        };
+        return doTask(task);
     }
 
-    public TaggerClient getClient() {
-        return client;
+    public void disconnect() {
+        client = null;
+        setNetworkState(NetworkState.OFFLINE);
     }
 
     /**
@@ -156,6 +159,29 @@ public class ClientState {
 
     public void removeClientStateListener(ClientStateListener listener) {
         listeners.remove(listener);
+    }
+
+    /**
+     * Executes the provided task on the current client instance. The network
+     * state is set automatically if an error arises.
+     * 
+     * @param task
+     *            {@link ClientTask} to execute.
+     */
+    public boolean doTask(ClientTask task) {
+        boolean result = false;
+        try {
+            result = task.run(client);
+            if (networkState != NetworkState.OK) {
+                setNetworkState(NetworkState.OK);
+            }
+        } catch (TaggerClientException e) {
+            if (!e.isNetworkError()) {
+                Logger.e("Error while communicating with server: " + e);
+            }
+            setNetworkState(NetworkState.ERROR);
+        }
+        return result;
     }
 
 }
