@@ -172,8 +172,10 @@ public class ClientState {
         boolean result = false;
         try {
             result = task.run(client);
-            if (networkState != NetworkState.OK) {
+            if (result) {
                 setNetworkState(NetworkState.OK);
+            } else {
+                setNetworkState(NetworkState.ERROR);
             }
         } catch (TaggerClientException e) {
             if (!e.isNetworkError()) {
