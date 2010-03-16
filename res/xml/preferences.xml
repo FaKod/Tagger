@@ -16,4 +16,12 @@
             android:singleLine="true"
             android:password="true" />
     </PreferenceCategory>
+    <PreferenceCategory
+        android:summary="@string/prefs_updater_summary"
+        android:title="@string/prefs_updater">
+        <CheckBoxPreference
+            android:summary="@string/prefs_updater_keepalive_summary"
+            android:title="@string/prefs_updater_keepalive"
+            android:key="@string/prefs_updater_keepalive_key" />
+    </PreferenceCategory>
 </PreferenceScreen>

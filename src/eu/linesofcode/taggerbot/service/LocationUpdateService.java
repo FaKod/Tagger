@@ -10,10 +10,15 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
 import eu.linesofcode.taggerbot.ClientState;
 import eu.linesofcode.taggerbot.ClientTask;
+import eu.linesofcode.taggerbot.GpsState;
 import eu.linesofcode.taggerbot.Logger;
 import eu.linesofcode.taggerbot.R;
 import eu.linesofcode.taggerbot.activity.ShowMap;
@@ -33,6 +38,17 @@ public class LocationUpdateService extends Service {
     private static final int NOTIFY_STATUS = 100;
 
     /**
+     * Required accuracy for a "good" GPS signal (meters).
+     */
+    private static final int REQUIRED_ACCURACY = 10;
+
+    /**
+     * GPS update rate (milliseconds). Note that this is maximum update rate and
+     * not a fixed rate!
+     */
+    private static final int GPS_INTERVAL = 5000;
+
+    /**
      * Initial wait time before doing the first location update (seconds).
      */
     private static final int INITIAL_WAIT = 10;
@@ -44,6 +60,8 @@ public class LocationUpdateService extends Service {
 
     private ScheduledExecutorService worker;
     private NotificationManager notifyMan;
+    private LocationManager locMan;
+    private TaggerLocationListener locationListener;
 
     /*
      * (non-Javadoc)
@@ -53,6 +71,9 @@ public class LocationUpdateService extends Service {
     public void onCreate() {
         super.onCreate();
         notifyMan = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        locationListener = new TaggerLocationListener();
+        locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
     }
 
     /*
@@ -61,6 +82,7 @@ public class LocationUpdateService extends Service {
      */
     @Override
     public void onDestroy() {
+        locMan.removeUpdates(locationListener);
         notifyMan.cancel(NOTIFY_STATUS);
         if (worker != null) {
             worker.shutdown();
@@ -77,6 +99,9 @@ public class LocationUpdateService extends Service {
         super.onStart(intent, startId);
         setupUpdater();
         setupNotification();
+
+        locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                GPS_INTERVAL, 5, locationListener);
     }
 
     /**
@@ -153,6 +178,68 @@ public class LocationUpdateService extends Service {
                                         Toast.LENGTH_LONG).show();
                     }
                 }
+            }
+        }
+
+    }
+
+    private class TaggerLocationListener implements LocationListener {
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * android.location.LocationListener#onLocationChanged(android.location
+         * .Location)
+         */
+        @Override
+        public void onLocationChanged(Location location) {
+            boolean accurate = location.hasAccuracy()
+                    && (location.getAccuracy() < REQUIRED_ACCURACY);
+            if (accurate) {
+                ClientState.getState().setGpsState(GpsState.OK);
+            } else {
+                ClientState.getState().setGpsState(GpsState.MEDIUM);
+            }
+            ClientState.getState().setCurrentLocation(location);
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * android.location.LocationListener#onProviderDisabled(java.lang.String
+         * )
+         */
+        @Override
+        public void onProviderDisabled(String provider) {
+            ClientState.getState().setGpsState(GpsState.BAD);
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * android.location.LocationListener#onProviderEnabled(java.lang.String)
+         */
+        @Override
+        public void onProviderEnabled(String provider) {
+            ClientState.getState().setGpsState(GpsState.MEDIUM);
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * android.location.LocationListener#onStatusChanged(java.lang.String,
+         * int, android.os.Bundle)
+         */
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            switch (status) {
+            case LocationProvider.AVAILABLE:
+                ClientState.getState().setGpsState(GpsState.OK);
+                break;
+            case LocationProvider.TEMPORARILY_UNAVAILABLE:
+            case LocationProvider.OUT_OF_SERVICE:
+                ClientState.getState().setGpsState(GpsState.BAD);
+                break;
             }
         }
 

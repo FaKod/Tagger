@@ -24,12 +24,14 @@ public class Prefs {
 
     private String keyUser;
     private String keyPassword;
+    private String keyKeepAlive;
     private SharedPreferences prefs;
 
     private Prefs(Context ctx) {
         prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
         keyUser = ctx.getString(R.string.prefs_login_user_key);
         keyPassword = ctx.getString(R.string.prefs_login_password_key);
+        keyKeepAlive = ctx.getString(R.string.prefs_updater_keepalive_key);
     }
 
     /**
@@ -57,6 +59,16 @@ public class Prefs {
     }
 
     /**
+     * @param key
+     * @param value
+     */
+    private void setValue(String key, boolean value) {
+        Editor editor = prefs.edit();
+        editor.putBoolean(key, value);
+        editor.commit();
+    }
+
+    /**
      * 
      */
     public String getPassword() {
@@ -68,6 +80,14 @@ public class Prefs {
      */
     public void setPassword(String value) {
         setValue(keyPassword, value);
+    }
+
+    public boolean isKeepAlive() {
+        return prefs.getBoolean(keyKeepAlive, false);
+    }
+
+    public void setKeepAlive(boolean value) {
+        setValue(keyKeepAlive, value);
     }
 
 }

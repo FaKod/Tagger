@@ -8,9 +8,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,26 +31,13 @@ import eu.linesofcode.taggerbot.service.LocationUpdateService;
 
 public class ShowMap extends MapActivity {
 
-    /**
-     * Required accuracy for a "good" GPS signal (meters).
-     */
-    private static final int REQUIRED_ACCURACY = 10;
-
-    /**
-     * GPS update rate (milliseconds). Note that this is maximum update rate and
-     * not a fixed rate!
-     */
-    private static final int GPS_INTERVAL = 5000;
-
     private static final int DIALOG_LOGINWARNING = 100;
 
     private ImageView gpsIndicator;
     private ImageView networkIndicator;
     private MapView mapView;
     private MyLocationOverlay locationOverlay;
-    private TaggerLocationListener locationListener;
     private ClientStateListener stateListener;
-    private LocationManager locMan;
     private ExecutorService worker = Executors.newSingleThreadExecutor();
     private boolean showSatImages = true;
 
@@ -78,9 +62,6 @@ public class ShowMap extends MapActivity {
         locationOverlay = new MyLocationOverlay(this, mapView);
         mapView.getOverlays().add(locationOverlay);
 
-        locationListener = new TaggerLocationListener();
-        locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
-
         stateListener = new StateListener();
 
         Intent updaterIntent = new Intent(this, LocationUpdateService.class);
@@ -99,8 +80,6 @@ public class ShowMap extends MapActivity {
 
         locationOverlay.enableMyLocation();
         locationOverlay.enableCompass();
-        locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                GPS_INTERVAL, 5, locationListener);
 
         if (!ClientState.getState().isConnected()) {
             worker.submit(new Runnable() {
@@ -135,7 +114,6 @@ public class ShowMap extends MapActivity {
 
         locationOverlay.disableMyLocation();
         locationOverlay.disableCompass();
-        locMan.removeUpdates(locationListener);
 
         ClientState.getState().removeClientStateListener(stateListener);
     }
@@ -147,9 +125,19 @@ public class ShowMap extends MapActivity {
     @Override
     protected void onDestroy() {
         worker.shutdown();
+        if (!Prefs.get().isKeepAlive()) {
+            // Kill background updater when keep-alive is not active.
+            stopUpdater();
+        }
+        super.onDestroy();
+    }
+
+    /**
+     * Stops the background update service.
+     */
+    private void stopUpdater() {
         Intent updaterIntent = new Intent(this, LocationUpdateService.class);
         stopService(updaterIntent);
-        super.onDestroy();
     }
 
     /*
@@ -186,6 +174,10 @@ public class ShowMap extends MapActivity {
             showSatImages = !showSatImages;
             mapView.setSatellite(showSatImages);
             return true;
+        case R.id.exit:
+            stopUpdater();
+            finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -216,80 +208,17 @@ public class ShowMap extends MapActivity {
         return dialog;
     }
 
-    private class TaggerLocationListener implements LocationListener {
-
-        /*
-         * (non-Javadoc)
-         * @see
-         * android.location.LocationListener#onLocationChanged(android.location
-         * .Location)
-         */
-        @Override
-        public void onLocationChanged(Location location) {
-            mapView.getController().animateTo(getGeoPoint(location));
-            boolean accurate = location.hasAccuracy()
-                    && (location.getAccuracy() < REQUIRED_ACCURACY);
-            if (accurate) {
-                ClientState.getState().setGpsState(GpsState.OK);
-            } else {
-                ClientState.getState().setGpsState(GpsState.MEDIUM);
-            }
-            ClientState.getState().setCurrentLocation(location);
-        }
-
-        /**
-         * Creates a {@link GeoPoint} containing the provided {@link Location}.
-         * 
-         * @param location
-         *            Location to convert.
-         * @return GeoPoint that points to the same location.
-         */
-        private GeoPoint getGeoPoint(Location location) {
-            int latitude = (int) (location.getLatitude() * 1E6);
-            int longitude = (int) (location.getLongitude() * 1E6);
-            return new GeoPoint(latitude, longitude);
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see
-         * android.location.LocationListener#onProviderDisabled(java.lang.String
-         * )
-         */
-        @Override
-        public void onProviderDisabled(String provider) {
-            ClientState.getState().setGpsState(GpsState.BAD);
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see
-         * android.location.LocationListener#onProviderEnabled(java.lang.String)
-         */
-        @Override
-        public void onProviderEnabled(String provider) {
-            ClientState.getState().setGpsState(GpsState.MEDIUM);
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see
-         * android.location.LocationListener#onStatusChanged(java.lang.String,
-         * int, android.os.Bundle)
-         */
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            switch (status) {
-            case LocationProvider.AVAILABLE:
-                ClientState.getState().setGpsState(GpsState.OK);
-                break;
-            case LocationProvider.TEMPORARILY_UNAVAILABLE:
-            case LocationProvider.OUT_OF_SERVICE:
-                ClientState.getState().setGpsState(GpsState.BAD);
-                break;
-            }
-        }
-
+    /**
+     * Creates a {@link GeoPoint} containing the provided {@link Location}.
+     * 
+     * @param location
+     *            Location to convert.
+     * @return GeoPoint that points to the same location.
+     */
+    private GeoPoint getGeoPoint(Location location) {
+        int latitude = (int) (location.getLatitude() * 1E6);
+        int longitude = (int) (location.getLongitude() * 1E6);
+        return new GeoPoint(latitude, longitude);
     }
 
     private class StateListener implements ClientStateListener {
@@ -352,6 +281,17 @@ public class ShowMap extends MapActivity {
                     }
                 }
             });
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * eu.linesofcode.taggerbot.ClientStateListener#locationChanged(android
+         * .location.Location)
+         */
+        @Override
+        public void locationChanged(Location newLocation) {
+            mapView.getController().animateTo(getGeoPoint(newLocation));
         }
 
     }

@@ -72,6 +72,27 @@ public class ClientState {
      */
     public void setCurrentLocation(Location location) {
         currentLocation = location;
+        fireLocationChanged(location);
+    }
+
+    /**
+     * Notifies all listeners that the current location has changed.
+     * 
+     * @param location
+     *            New location.
+     */
+    private void fireLocationChanged(final Location location) {
+        final List<ClientStateListener> listenerCopy = new ArrayList<ClientStateListener>(
+                listeners);
+        notifier.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                for (ClientStateListener listener : listenerCopy) {
+                    listener.locationChanged(location);
+                }
+            }
+        });
     }
 
     /**
