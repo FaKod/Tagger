@@ -1,5 +1,8 @@
 package eu.linesofcode.taggerbot.client.data;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tcircleoffriends complex type.
@@ -23,12 +26,22 @@ package eu.linesofcode.taggerbot.client.data;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "circleOfFriends")
 public class Tcircleoffriends {
 
+    @Element
     protected String id;
+
+    @Element
     protected String name;
+
+    @Element
     protected String circleoffriendstype;
+
+    @Element
     protected TidArray users;
+
+    @Element
     protected String owningUserId;
 
     /**

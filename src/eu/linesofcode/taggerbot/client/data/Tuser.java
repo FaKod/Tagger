@@ -1,5 +1,8 @@
 package eu.linesofcode.taggerbot.client.data;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tuser complex type.
@@ -23,12 +26,22 @@ package eu.linesofcode.taggerbot.client.data;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "user")
 public class Tuser {
 
+    @Element
     protected String id;
+
+    @Element
     protected String name;
+
+    @Element
     protected Tlocation location;
+
+    @Element
     protected double direction;
+
+    @Element
     protected TidArray locationtags;
 
     /**

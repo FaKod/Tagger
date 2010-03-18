@@ -16,12 +16,12 @@ public class UserService extends ServiceBase {
     }
 
     public Tuser get() {
-        EUser result = client().get("user");
+        EUser result = client().get(EUser.class, "user");
         return result.getUser();
     }
 
     public Tuser get(int uid) {
-        EUser result = client().get("user/User/" + uid);
+        EUser result = client().get(EUser.class, "user/User/" + uid);
         return result.getUser();
     }
 

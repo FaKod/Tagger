@@ -1,5 +1,8 @@
 package eu.linesofcode.taggerbot.client.data;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tlocationtag complex type.
@@ -22,11 +25,19 @@ package eu.linesofcode.taggerbot.client.data;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "locationTag")
 public class Tlocationtag {
 
+    @Element
     protected String id;
+
+    @Element
     protected String name;
+
+    @Element
     protected String infotext;
+
+    @Element
     protected Tlocation point;
 
     /**

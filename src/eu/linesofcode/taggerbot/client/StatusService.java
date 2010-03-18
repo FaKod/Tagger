@@ -16,7 +16,7 @@ public class StatusService extends ServiceBase {
     }
 
     public EStatusReturn update(EStatus status) {
-        return client().put("Status", status);
+        return client().put(EStatusReturn.class, "Status", status);
     }
 
 }

@@ -3,6 +3,9 @@ package eu.linesofcode.taggerbot.client.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tidArray complex type.
@@ -22,8 +25,10 @@ import java.util.List;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "idArray")
 public class TidArray {
 
+    @ElementList(entry = "ids", required = false, inline = true)
     protected List<String> ids;
 
     /**

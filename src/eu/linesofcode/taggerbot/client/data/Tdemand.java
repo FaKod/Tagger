@@ -3,6 +3,10 @@ package eu.linesofcode.taggerbot.client.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tdemand complex type.
@@ -26,12 +30,22 @@ import java.util.List;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "demand")
 public class Tdemand {
 
+    @Element
     protected String id;
+
+    @Element
     protected String name;
+
+    @Element(required = false)
     protected String demandType;
+
+    @ElementList(entry = "demandKey", required = false, inline = true)
     protected List<String> demandKey;
+
+    @ElementList(entry = "demandValue", required = false, inline = true)
     protected List<String> demandValue;
 
     /**

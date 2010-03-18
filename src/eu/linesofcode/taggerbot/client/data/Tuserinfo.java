@@ -1,5 +1,8 @@
 package eu.linesofcode.taggerbot.client.data;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tuserinfo complex type.
@@ -22,11 +25,19 @@ package eu.linesofcode.taggerbot.client.data;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "userInfo")
 public class Tuserinfo {
 
+    @Element
     protected String id;
+
+    @Element
     protected String fullname;
+
+    @Element
     protected String address;
+
+    @Element
     protected String email;
 
     /**

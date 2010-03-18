@@ -1,5 +1,8 @@
 package eu.linesofcode.taggerbot.client.data;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for tuserlocation complex type.
@@ -23,12 +26,22 @@ package eu.linesofcode.taggerbot.client.data;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "userlocation")
 public class Tuserlocation {
 
+    @Element(name = "userId")
     protected String userId;
+
+    @Element(name = "latitude")
     protected double latitude;
+
+    @Element(name = "longitude")
     protected double longitude;
+
+    @Element(name = "direction")
     protected double direction;
+
+    @Element(name = "speed")
     protected double speed;
 
     /**

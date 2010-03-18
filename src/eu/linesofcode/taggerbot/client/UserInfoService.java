@@ -16,15 +16,16 @@ public class UserInfoService extends ServiceBase {
     }
 
     public Tuserinfo get(int uid) {
-        EUserInfo result = client().get("user/UserInfo/" + uid);
+        EUserInfo result = client()
+                .get(EUserInfo.class, "user/UserInfo/" + uid);
         return result.getUserInfo();
     }
 
     public Tuserinfo update(Tuserinfo info) {
         EUserInfo request = new EUserInfo();
         request.setUserInfo(info);
-        EUserInfo result = client().post("user/UserInfo/" + info.getId(),
-                request);
+        EUserInfo result = client().post(EUserInfo.class,
+                "user/UserInfo/" + info.getId(), request);
         return result.getUserInfo();
     }
 

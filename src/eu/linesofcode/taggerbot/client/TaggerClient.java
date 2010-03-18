@@ -59,8 +59,8 @@ public class TaggerClient {
         client.setCredentialsProvider(credsProvider);
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T execute(HttpRequestBase request) {
+    private <T> T execute(Class<? extends T> resultClass,
+            HttpRequestBase request) {
         T result = null;
         try {
             HttpResponse response = client.execute(request);
@@ -70,7 +70,7 @@ public class TaggerClient {
             }
             HttpEntity entity = response.getEntity();
             String content = readEntity(entity);
-            result = (T) TaggerXml.xml().fromXML(content);
+            result = (T) TaggerXml.instance().fromXML(resultClass, content);
         } catch (IOException e) {
             throw new TaggerClientException("Communication error!", e);
         }
@@ -104,7 +104,7 @@ public class TaggerClient {
     private StringEntity createXmlEntity(Object payload) {
         StringEntity entity;
         try {
-            String postXml = TaggerXml.xml().toXML(payload);
+            String postXml = TaggerXml.instance().toXML(payload);
             entity = new StringEntity(XML_HEADER + postXml);
             entity.setContentType("application/xml");
         } catch (UnsupportedEncodingException e) {
@@ -113,23 +113,25 @@ public class TaggerClient {
         return entity;
     }
 
-    protected <T> T get(String method) {
+    protected <T> T get(Class<? extends T> resultClass, String method) {
         HttpGet request = new HttpGet(SERVER_BASE + method);
-        return execute(request);
+        return execute(resultClass, request);
     }
 
-    protected <T> T post(String method, Object payload) {
+    protected <T> T post(Class<? extends T> resultClass, String method,
+            Object payload) {
         StringEntity entity = createXmlEntity(payload);
         HttpPost request = new HttpPost(SERVER_BASE + method);
         request.setEntity(entity);
-        return execute(request);
+        return execute(resultClass, request);
     }
 
-    protected <T> T put(String method, Object payload) {
+    protected <T> T put(Class<? extends T> resultClass, String method,
+            Object payload) {
         StringEntity entity = createXmlEntity(payload);
         HttpPut request = new HttpPut(SERVER_BASE + method);
         request.setEntity(entity);
-        return execute(request);
+        return execute(resultClass, request);
     }
 
     public UserService user() {

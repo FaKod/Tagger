@@ -1,5 +1,8 @@
 package eu.linesofcode.taggerbot.client.data;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for anonymous complex type.
@@ -19,8 +22,10 @@ package eu.linesofcode.taggerbot.client.data;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "E_planIds")
 public class EPlanIds {
 
+    @Element
     protected TidArray planIdArray;
 
     /**

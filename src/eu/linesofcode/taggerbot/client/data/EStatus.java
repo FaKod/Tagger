@@ -3,6 +3,10 @@ package eu.linesofcode.taggerbot.client.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
+
 /**
  * <p>
  * Java class for anonymous complex type.
@@ -28,14 +32,28 @@ import java.util.List;
  * &lt;/complexType>
  * </pre>
  */
+@Root(name = "E_status")
 public class EStatus {
 
+    @ElementList(required = false, inline = true, entry = "statusKey")
     protected List<String> statusKey;
+
+    @ElementList(required = false, inline = true, entry = "statusValue")
     protected List<String> statusValue;
+
+    @Element(required = false)
     protected Tlocation location;
+
+    @Element(required = false)
     protected Tdemand demand;
+
+    @Element(required = false)
     protected String htmlText;
+
+    @Element
     protected double distance;
+
+    @Element
     protected double azimuth;
 
     /**
