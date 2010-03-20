@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import android.location.Location;
 import eu.linesofcode.taggerbot.client.TaggerClient;
 import eu.linesofcode.taggerbot.client.TaggerClientException;
+import eu.linesofcode.taggerbot.client.data.Tlocationtag;
 import eu.linesofcode.taggerbot.client.data.Tuser;
 
 /**
@@ -32,6 +33,8 @@ public class ClientState {
     NetworkState networkState = NetworkState.OFFLINE;
     List<ClientStateListener> listeners = Collections
             .synchronizedList(new ArrayList<ClientStateListener>());
+    List<Tlocationtag> ownLocationTags = Collections
+            .synchronizedList(new ArrayList<Tlocationtag>());
 
     private ClientState() {
     }
@@ -207,4 +210,75 @@ public class ClientState {
         return result;
     }
 
+    /**
+     * Retrieves all own location tags from the client database.
+     * 
+     * @return List of own location tags.
+     */
+    public List<Tlocationtag> getOwnTags() {
+        // Return a copy of the actual list.
+        return new ArrayList<Tlocationtag>(ownLocationTags);
+    }
+
+    /**
+     * Modify the own location tag database.
+     * 
+     * @param added
+     *            Tags to add to database.
+     * @param removed
+     *            Tags to remove from database.
+     */
+    public void modifyOwnTags(List<Tlocationtag> added,
+            List<Tlocationtag> removed) {
+        for (Tlocationtag tag : added) {
+            ownLocationTags.add(tag);
+        }
+        for (Tlocationtag tag : removed) {
+            ownLocationTags.remove(tag);
+        }
+        fireOwnTagsChanged(added, removed);
+    }
+
+    /**
+     * Notify the listeners that the own tag database has changed.
+     * 
+     * @param added
+     *            Tags that have been added.
+     * @param removed
+     *            Tags that have been removed.
+     */
+    private void fireOwnTagsChanged(final List<Tlocationtag> added,
+            final List<Tlocationtag> removed) {
+        final List<ClientStateListener> listenerCopy = new ArrayList<ClientStateListener>(
+                listeners);
+        notifier.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                for (ClientStateListener listener : listenerCopy) {
+                    listener.ownTagsChanged(added, removed);
+                }
+            }
+        });
+    }
+
+    /**
+     * Notify the user with a message.
+     * 
+     * @param message
+     *            Message to show.
+     */
+    public void alertUser(final String message) {
+        final List<ClientStateListener> listenerCopy = new ArrayList<ClientStateListener>(
+                listeners);
+        notifier.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                for (ClientStateListener listener : listenerCopy) {
+                    listener.alertUser(message);
+                }
+            }
+        });
+    }
 }

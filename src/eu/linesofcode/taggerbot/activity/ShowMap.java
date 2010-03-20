@@ -1,5 +1,6 @@
 package eu.linesofcode.taggerbot.activity;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,7 +28,10 @@ import eu.linesofcode.taggerbot.Logger;
 import eu.linesofcode.taggerbot.NetworkState;
 import eu.linesofcode.taggerbot.Prefs;
 import eu.linesofcode.taggerbot.R;
+import eu.linesofcode.taggerbot.client.data.Tlocationtag;
+import eu.linesofcode.taggerbot.map.LocationTagOverlay;
 import eu.linesofcode.taggerbot.service.LocationUpdateService;
+import eu.linesofcode.taggerbot.service.TagUpdateService;
 
 public class ShowMap extends MapActivity {
 
@@ -40,6 +44,7 @@ public class ShowMap extends MapActivity {
     private ClientStateListener stateListener;
     private ExecutorService worker = Executors.newSingleThreadExecutor();
     private boolean showSatImages = true;
+    private LocationTagOverlay tagOverlay;
 
     /** Called when the activity is first created. */
     @Override
@@ -62,10 +67,15 @@ public class ShowMap extends MapActivity {
         locationOverlay = new MyLocationOverlay(this, mapView);
         mapView.getOverlays().add(locationOverlay);
 
+        tagOverlay = new LocationTagOverlay(this, mapView);
+
         stateListener = new StateListener();
 
-        Intent updaterIntent = new Intent(this, LocationUpdateService.class);
-        startService(updaterIntent);
+        Intent serviceIntent = new Intent(this, LocationUpdateService.class);
+        startService(serviceIntent);
+
+        serviceIntent = new Intent(this, TagUpdateService.class);
+        startService(serviceIntent);
     }
 
     /*
@@ -94,9 +104,10 @@ public class ShowMap extends MapActivity {
                         String user = Prefs.get().getUser();
                         String password = Prefs.get().getPassword();
                         if (!ClientState.getState().login(user, password)) {
-                            Toast.makeText(ShowMap.this,
-                                    R.string.showmap_toast_loginfail,
-                                    Toast.LENGTH_LONG).show();
+                            ClientState
+                                    .getState()
+                                    .alertUser(
+                                            getString(R.string.showmap_toast_loginfail));
                         }
                     }
                 }
@@ -127,17 +138,26 @@ public class ShowMap extends MapActivity {
         worker.shutdown();
         if (!Prefs.get().isKeepAlive()) {
             // Kill background updater when keep-alive is not active.
-            stopUpdater();
+            stopLocationUpdater();
         }
+        stopTagUpdater();
         super.onDestroy();
+    }
+
+    /**
+     * Stops the tag updater service.
+     */
+    private void stopTagUpdater() {
+        Intent tagIntent = new Intent(this, TagUpdateService.class);
+        stopService(tagIntent);
     }
 
     /**
      * Stops the background update service.
      */
-    private void stopUpdater() {
-        Intent updaterIntent = new Intent(this, LocationUpdateService.class);
-        stopService(updaterIntent);
+    private void stopLocationUpdater() {
+        Intent locationIntent = new Intent(this, LocationUpdateService.class);
+        stopService(locationIntent);
     }
 
     /*
@@ -175,7 +195,7 @@ public class ShowMap extends MapActivity {
             mapView.setSatellite(showSatImages);
             return true;
         case R.id.exit:
-            stopUpdater();
+            stopLocationUpdater();
             finish();
             return true;
         }
@@ -292,6 +312,36 @@ public class ShowMap extends MapActivity {
         @Override
         public void locationChanged(Location newLocation) {
             mapView.getController().animateTo(getGeoPoint(newLocation));
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * eu.linesofcode.taggerbot.ClientStateListener#ownTagsChanged(java.
+         * util.List, java.util.List)
+         */
+        @Override
+        public void ownTagsChanged(List<Tlocationtag> added,
+                List<Tlocationtag> removed) {
+            tagOverlay.updateOwnTags(added, removed);
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * eu.linesofcode.taggerbot.ClientStateListener#alertUser(java.lang.
+         * String)
+         */
+        @Override
+        public void alertUser(final String message) {
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    Toast.makeText(ShowMap.this, message, Toast.LENGTH_LONG)
+                            .show();
+                }
+            });
         }
 
     }

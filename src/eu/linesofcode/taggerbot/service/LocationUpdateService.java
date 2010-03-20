@@ -15,7 +15,6 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.widget.Toast;
 import eu.linesofcode.taggerbot.ClientState;
 import eu.linesofcode.taggerbot.ClientTask;
 import eu.linesofcode.taggerbot.GpsState;
@@ -172,10 +171,8 @@ public class LocationUpdateService extends Service {
                         }
                     };
                     if (!ClientState.getState().doTask(task)) {
-                        Toast
-                                .makeText(LocationUpdateService.this,
-                                        R.string.updateservice_error,
-                                        Toast.LENGTH_LONG).show();
+                        ClientState.getState().alertUser(
+                                getString(R.string.updateservice_error));
                     }
                 }
             }

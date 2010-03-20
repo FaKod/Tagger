@@ -13,14 +13,14 @@ import org.simpleframework.xml.core.Persister;
 public final class TaggerXml {
 
     private static TaggerXml instance;
-    
+
     public static synchronized TaggerXml instance() {
         if (instance == null) {
             instance = new TaggerXml();
         }
         return instance;
     }
-    
+
     private Persister parser;
 
     private TaggerXml() {

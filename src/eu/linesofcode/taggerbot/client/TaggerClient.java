@@ -38,6 +38,8 @@ public class TaggerClient {
 
     private UserInfoService userInfoService;
 
+    private LocationTagService locationTagService;
+
     /**
      * Creates a new client instance connecting to the Tagger server with the
      * provided credentials.
@@ -51,6 +53,7 @@ public class TaggerClient {
         userService = new UserService(this);
         userInfoService = new UserInfoService(this);
         statusService = new StatusService(this);
+        locationTagService = new LocationTagService(this);
 
         credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(new AuthScope(null, -1),
@@ -71,8 +74,14 @@ public class TaggerClient {
             HttpEntity entity = response.getEntity();
             String content = readEntity(entity);
             result = (T) TaggerXml.instance().fromXML(resultClass, content);
+            entity.consumeContent();
         } catch (IOException e) {
-            throw new TaggerClientException("Communication error!", e);
+            throw new TaggerClientException("Communication error: "
+                    + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new TaggerClientException(
+                    "Error while getting result from server: " + e.getMessage(),
+                    e);
         }
         return result;
     }
@@ -144,5 +153,9 @@ public class TaggerClient {
 
     public StatusService status() {
         return statusService;
+    }
+
+    public LocationTagService tags() {
+        return locationTagService;
     }
 }

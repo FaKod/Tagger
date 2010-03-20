@@ -31,7 +31,7 @@ public class Tlocation {
     @Element(required = false)
     protected String id;
 
-    @Element
+    @Element(required = false)
     protected String locationType;
 
     @Element
