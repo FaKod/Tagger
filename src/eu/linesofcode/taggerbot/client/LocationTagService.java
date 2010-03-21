@@ -40,4 +40,10 @@ public class LocationTagService extends ServiceBase {
         return tag.getLocationTag();
     }
 
+    public Tlocationtag create(ELocationTag data, int userId) {
+        ELocationTag tag = client().post(ELocationTag.class,
+                "locationtag/LocationTag/" + userId + "?xml=yes", data);
+        return tag.getLocationTag();
+    }
+
 }

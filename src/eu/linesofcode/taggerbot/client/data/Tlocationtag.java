@@ -28,7 +28,7 @@ import org.simpleframework.xml.Root;
 @Root(name = "locationTag")
 public class Tlocationtag {
 
-    @Element
+    @Element(required = false)
     protected String id;
 
     @Element

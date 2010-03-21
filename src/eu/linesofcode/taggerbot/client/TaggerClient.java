@@ -67,7 +67,7 @@ public class TaggerClient {
         T result = null;
         try {
             HttpResponse response = client.execute(request);
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            if ((response.getStatusLine().getStatusCode() / 100) != 2) {
                 throw new TaggerClientException("HTTP status: "
                         + response.getStatusLine().getStatusCode());
             }
