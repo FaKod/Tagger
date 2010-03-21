@@ -260,6 +260,9 @@ public class ShowMap extends MapActivity {
                     ClientState.getState().doTask(task);
                 }
             });
+        } else {
+            Toast.makeText(this, R.string.showmap_toast_nolocation,
+                    Toast.LENGTH_LONG).show();
         }
     }
 
