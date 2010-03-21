@@ -10,6 +10,10 @@
         android:id="@+id/togglesatellite"
         android:icon="@drawable/android:ic_menu_mapmode" />
     <item
+        android:title="@string/showmap_menu_createtag"
+        android:id="@+id/createtag"
+        android:icon="@drawable/android:ic_menu_add" />
+    <item
         android:title="@string/showmap_menu_exit"
         android:id="@+id/exit"
         android:icon="@drawable/android:ic_menu_close_clear_cancel" />

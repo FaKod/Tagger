@@ -26,6 +26,7 @@
     <string name="prefs_updater_keepalive_key">updater.keepalive</string>
     <string name="prefs_updater_keepalive_summary">Keeps on updating the server location when map view is not visible.</string>
     <string name="settings">Settings</string>
+    <string name="showmap_menu_createtag">Create tag</string>
     <string name="showmap_menu_exit">Exit</string>
     <string name="showmap_menu_satellite">Toggle Satellite</string>
     <string name="showmap_menu_showprefs">Settings</string>

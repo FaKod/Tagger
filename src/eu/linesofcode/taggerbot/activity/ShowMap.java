@@ -34,7 +34,11 @@ import eu.linesofcode.taggerbot.NetworkState;
 import eu.linesofcode.taggerbot.Prefs;
 import eu.linesofcode.taggerbot.R;
 import eu.linesofcode.taggerbot.client.TaggerClient;
+import eu.linesofcode.taggerbot.client.data.ELocationTag;
+import eu.linesofcode.taggerbot.client.data.LocationType;
+import eu.linesofcode.taggerbot.client.data.Tlocation;
 import eu.linesofcode.taggerbot.client.data.Tlocationtag;
+import eu.linesofcode.taggerbot.client.data.Tuser;
 import eu.linesofcode.taggerbot.map.LocationTagOverlay;
 import eu.linesofcode.taggerbot.map.TagOverlayListener;
 import eu.linesofcode.taggerbot.service.LocationUpdateService;
@@ -208,8 +212,55 @@ public class ShowMap extends MapActivity {
             stopLocationUpdater();
             finish();
             return true;
+        case R.id.createtag:
+            createTagCurrentLocation();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Creates a new location tag at the current location.
+     */
+    private void createTagCurrentLocation() {
+        Location currentLocation = ClientState.getState().getCurrentLocation();
+        if (currentLocation != null) {
+            Tlocation tagLocation = new Tlocation();
+            tagLocation.setLocationType(LocationType.LocationTag.toString());
+            tagLocation.setLatitude(currentLocation.getLatitude());
+            tagLocation.setLongitude(currentLocation.getLongitude());
+
+            // TODO Ask user for name and text
+            Tlocationtag tag = new Tlocationtag();
+            tag.setName("Name");
+            tag.setInfotext("Infotext");
+            tag.setPoint(tagLocation);
+
+            final ELocationTag data = new ELocationTag();
+            data.setLocationTag(tag);
+
+            worker.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    ClientTask task = new ClientTask() {
+
+                        @Override
+                        public boolean run(TaggerClient client) {
+                            Tuser me = client.user().get();
+                            Tlocationtag tag = client.tags().create(data,
+                                    Integer.parseInt(me.getId()));
+                            List<Tlocationtag> added = new ArrayList<Tlocationtag>();
+                            added.add(tag);
+                            ClientState.getState().modifyOwnTags(added,
+                                    new ArrayList<Tlocationtag>());
+                            return true;
+                        }
+                    };
+                    ClientState.getState().doTask(task);
+                }
+            });
+        }
     }
 
     /*
