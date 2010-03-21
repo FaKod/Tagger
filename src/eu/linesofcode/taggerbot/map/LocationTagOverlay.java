@@ -76,6 +76,7 @@ public class LocationTagOverlay {
         }
 
         public void clear() {
+            setFocus(null);
             overlays.clear();
             tags.clear();
             populate();
