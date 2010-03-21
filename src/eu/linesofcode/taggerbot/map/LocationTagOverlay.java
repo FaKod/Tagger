@@ -11,7 +11,7 @@ import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
-import eu.linesofcode.taggerbot.Logger;
+import eu.linesofcode.taggerbot.ClientState;
 import eu.linesofcode.taggerbot.R;
 import eu.linesofcode.taggerbot.client.data.Tlocation;
 import eu.linesofcode.taggerbot.client.data.Tlocationtag;
@@ -23,30 +23,50 @@ import eu.linesofcode.taggerbot.client.data.Tlocationtag;
  */
 public class LocationTagOverlay {
 
+    Context context;
     OverlayList overlays;
     Drawable ownTagImage;
+    List<TagOverlayListener> listeners = new ArrayList<TagOverlayListener>();
 
     public LocationTagOverlay(Context ctx, MapView mapView) {
-        ownTagImage = ctx.getResources().getDrawable(R.drawable.tag_own);
+        context = ctx;
+        ownTagImage = context.getResources().getDrawable(R.drawable.tag_own);
         overlays = new OverlayList(ownTagImage);
 
         mapView.getOverlays().add(overlays);
     }
 
-    /**
-     * @param added
-     * @param removed
-     */
-    public void updateOwnTags(List<Tlocationtag> added,
-            List<Tlocationtag> removed) {
+    public void updateOwnTags() {
         overlays.clear();
-        for (Tlocationtag tag : added) {
+        for (Tlocationtag tag : ClientState.getState().getOwnTags()) {
             overlays.addOwnTag(tag);
+        }
+    }
+
+    /**
+     * @param tagListener
+     */
+    public void addTagOverlayListener(TagOverlayListener listener) {
+        listeners.add(listener);
+    }
+
+    /**
+     * Notify all listeners that a tag has been tapped.
+     * 
+     * @param tag
+     *            LocationTag that has been tapped.
+     */
+    protected void fireTagTapped(final Tlocationtag tag) {
+        final List<TagOverlayListener> copy = new ArrayList<TagOverlayListener>(
+                listeners);
+        for (TagOverlayListener listener : copy) {
+            listener.tagTapped(tag);
         }
     }
 
     private class OverlayList extends ItemizedOverlay<OverlayItem> {
 
+        private List<Tlocationtag> tags = new ArrayList<Tlocationtag>();
         private List<OverlayItem> overlays = new ArrayList<OverlayItem>();
 
         public OverlayList(Drawable defaultMarker) {
@@ -57,17 +77,19 @@ public class LocationTagOverlay {
 
         public void clear() {
             overlays.clear();
+            tags.clear();
             populate();
         }
 
         /**
          * @param tag
          */
-        public void addOwnTag(Tlocationtag tag) {
+        public synchronized void addOwnTag(Tlocationtag tag) {
             GeoPoint point = createGeoPoint(tag.getPoint());
             OverlayItem item = new OverlayItem(point, tag.getName(), tag
                     .getInfotext());
             overlays.add(item);
+            tags.add(tag);
             populate();
         }
 
@@ -87,7 +109,6 @@ public class LocationTagOverlay {
          */
         @Override
         protected OverlayItem createItem(int i) {
-            Logger.d("createItem(" + i + ")");
             return overlays.get(i);
         }
 
@@ -106,8 +127,8 @@ public class LocationTagOverlay {
          */
         @Override
         protected boolean onTap(int index) {
-            OverlayItem item = overlays.get(index);
-            Logger.d("Tapped on:" + item.getTitle());
+            Tlocationtag tag = tags.get(index);
+            fireTagTapped(tag);
             return true;
         }
 

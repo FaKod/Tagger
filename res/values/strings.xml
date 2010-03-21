@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TaggerBot</string>
-    <string name="dialog_login_title">Login data missing!</string>
+    <string name="dialog_button_close">Dismiss</string>
     <string name="dialog_login_text">
         You have not entered any login data.
         Please do so in the settings activity reachable with the options menu.
     </string>
-    <string name="dialog_login_button">Dismiss</string>
+    <string name="dialog_login_title">Login data missing!</string>
+    <string name="dialog_taginfo_delete">Delete tag</string>
+    <string name="dialog_taginfo_text">Info text:</string>
+    <string name="dialog_taginfo_title">Tag info</string>
+    <string name="dialog_taginfo_name">Name:</string>
     <string name="updateservice_error">Error while updating location on server! Check your network connection.</string>
     <string name="prefs_login">Login data</string>
     <string name="prefs_login_summary"></string>

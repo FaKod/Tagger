@@ -46,4 +46,8 @@ public class LocationTagService extends ServiceBase {
         return tag.getLocationTag();
     }
 
+    public void delete(int id) {
+        client().delete("locationtag/LocationTag/" + id);
+    }
+
 }

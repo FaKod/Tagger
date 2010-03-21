@@ -1,5 +1,6 @@
 package eu.linesofcode.taggerbot.activity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +14,9 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -23,19 +27,23 @@ import com.google.android.maps.MyLocationOverlay;
 
 import eu.linesofcode.taggerbot.ClientState;
 import eu.linesofcode.taggerbot.ClientStateListener;
+import eu.linesofcode.taggerbot.ClientTask;
 import eu.linesofcode.taggerbot.GpsState;
 import eu.linesofcode.taggerbot.Logger;
 import eu.linesofcode.taggerbot.NetworkState;
 import eu.linesofcode.taggerbot.Prefs;
 import eu.linesofcode.taggerbot.R;
+import eu.linesofcode.taggerbot.client.TaggerClient;
 import eu.linesofcode.taggerbot.client.data.Tlocationtag;
 import eu.linesofcode.taggerbot.map.LocationTagOverlay;
+import eu.linesofcode.taggerbot.map.TagOverlayListener;
 import eu.linesofcode.taggerbot.service.LocationUpdateService;
 import eu.linesofcode.taggerbot.service.TagUpdateService;
 
 public class ShowMap extends MapActivity {
 
     private static final int DIALOG_LOGINWARNING = 100;
+    private static final int DIALOG_TAGINFO = 101;
 
     private ImageView gpsIndicator;
     private ImageView networkIndicator;
@@ -45,6 +53,7 @@ public class ShowMap extends MapActivity {
     private ExecutorService worker = Executors.newSingleThreadExecutor();
     private boolean showSatImages = true;
     private LocationTagOverlay tagOverlay;
+    private Tlocationtag currentTag;
 
     /** Called when the activity is first created. */
     @Override
@@ -68,6 +77,7 @@ public class ShowMap extends MapActivity {
         mapView.getOverlays().add(locationOverlay);
 
         tagOverlay = new LocationTagOverlay(this, mapView);
+        tagOverlay.addTagOverlayListener(new TagListener());
 
         stateListener = new StateListener();
 
@@ -208,24 +218,103 @@ public class ShowMap extends MapActivity {
      */
     @Override
     protected Dialog onCreateDialog(int id) {
-        AlertDialog dialog = null;
+        Dialog dialog = null;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        DialogInterface.OnClickListener closeListener = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        };
         switch (id) {
         case DIALOG_LOGINWARNING:
-            DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            };
             dialog = builder.setTitle(R.string.dialog_login_title).setMessage(
                     R.string.dialog_login_text).setPositiveButton(
-                    R.string.dialog_login_button, listener)
-                    .setCancelable(false).create();
+                    R.string.dialog_button_close, closeListener).setCancelable(
+                    false).create();
+            break;
+        case DIALOG_TAGINFO:
+            dialog = createTaginfoDialog();
             break;
         }
         return dialog;
+    }
+
+    /**
+     * Creates the tag info dialog.
+     * 
+     * @return Created dialog.
+     */
+    private Dialog createTaginfoDialog() {
+        final Dialog dialog = new Dialog(this);
+        dialog.setTitle(R.string.dialog_taginfo_title);
+        dialog.setContentView(R.layout.dialog_taginfo);
+        Button closeButton = (Button) dialog.findViewById(R.id.taginfo_close);
+        closeButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        Button deleteButton = (Button) dialog.findViewById(R.id.taginfo_delete);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                deleteCurrentTag();
+            }
+        });
+        return dialog;
+    }
+
+    /**
+     * Deletes the currently selected location tag.
+     */
+    protected void deleteCurrentTag() {
+        if (currentTag != null) {
+            final Tlocationtag deleteTag = currentTag;
+            worker.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    ClientTask task = new ClientTask() {
+
+                        @Override
+                        public boolean run(TaggerClient client) {
+                            client.tags().delete(
+                                    Integer.parseInt(deleteTag.getId()));
+                            List<Tlocationtag> removed = new ArrayList<Tlocationtag>();
+                            removed.add(deleteTag);
+                            ClientState.getState().modifyOwnTags(
+                                    new ArrayList<Tlocationtag>(), removed);
+                            return true;
+                        }
+                    };
+                    ClientState.getState().doTask(task);
+                }
+            });
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onPrepareDialog(int, android.app.Dialog)
+     */
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog) {
+        switch (id) {
+        case DIALOG_TAGINFO:
+            EditText name = (EditText) dialog.findViewById(R.id.taginfo_name);
+            EditText text = (EditText) dialog.findViewById(R.id.taginfo_text);
+            name.setText(currentTag.getName());
+            text.setText(currentTag.getInfotext());
+            break;
+        case DIALOG_LOGINWARNING:
+            break;
+        }
     }
 
     /**
@@ -323,7 +412,7 @@ public class ShowMap extends MapActivity {
         @Override
         public void ownTagsChanged(List<Tlocationtag> added,
                 List<Tlocationtag> removed) {
-            tagOverlay.updateOwnTags(added, removed);
+            tagOverlay.updateOwnTags();
         }
 
         /*
@@ -342,6 +431,22 @@ public class ShowMap extends MapActivity {
                             .show();
                 }
             });
+        }
+
+    }
+
+    private class TagListener implements TagOverlayListener {
+
+        /*
+         * (non-Javadoc)
+         * @see
+         * eu.linesofcode.taggerbot.map.TagOverlayListener#tagTapped(eu.linesofcode
+         * .taggerbot.client.data.Tlocationtag)
+         */
+        @Override
+        public void tagTapped(Tlocationtag tag) {
+            currentTag = tag;
+            showDialog(DIALOG_TAGINFO);
         }
 
     }

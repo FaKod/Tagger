@@ -7,10 +7,10 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -143,6 +143,24 @@ public class TaggerClient {
         return execute(resultClass, request);
     }
 
+    protected void delete(String method) {
+        HttpDelete request = new HttpDelete(SERVER_BASE + method);
+        try {
+            HttpResponse response = client.execute(request);
+            if ((response.getStatusLine().getStatusCode() / 100) != 2) {
+                throw new TaggerClientException("HTTP status: "
+                        + response.getStatusLine().getStatusCode());
+            }
+        } catch (IOException e) {
+            throw new TaggerClientException("Communication error: "
+                    + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new TaggerClientException(
+                    "Error while getting result from server: " + e.getMessage(),
+                    e);
+        }
+    }
+
     public UserService user() {
         return userService;
     }
@@ -158,4 +176,5 @@ public class TaggerClient {
     public LocationTagService tags() {
         return locationTagService;
     }
+
 }
