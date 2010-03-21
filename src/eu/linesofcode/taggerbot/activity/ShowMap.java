@@ -106,15 +106,16 @@ public class ShowMap extends MapActivity {
         locationOverlay.enableCompass();
 
         if (!ClientState.getState().isConnected()) {
-            worker.submit(new Runnable() {
 
-                @Override
-                public void run() {
-                    if (Prefs.get().getUser() == null) {
-                        showDialog(DIALOG_LOGINWARNING);
-                        ClientState.getState().setNetworkState(
-                                NetworkState.OFFLINE);
-                    } else {
+            if (Prefs.get().getUser() == null) {
+                showDialog(DIALOG_LOGINWARNING);
+                ClientState.getState().setNetworkState(NetworkState.OFFLINE);
+            } else {
+                ClientState.getState().setNetworkState(NetworkState.OK);
+                worker.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
                         String user = Prefs.get().getUser();
                         String password = Prefs.get().getPassword();
                         if (!ClientState.getState().login(user, password)) {
@@ -124,8 +125,8 @@ public class ShowMap extends MapActivity {
                                             getString(R.string.showmap_toast_loginfail));
                         }
                     }
-                }
-            });
+                });
+            }
         }
     }
 
@@ -239,27 +240,32 @@ public class ShowMap extends MapActivity {
             final ELocationTag data = new ELocationTag();
             data.setLocationTag(tag);
 
-            worker.submit(new Runnable() {
+            if (ClientState.getState().isConnected()) {
+                worker.submit(new Runnable() {
 
-                @Override
-                public void run() {
-                    ClientTask task = new ClientTask() {
+                    @Override
+                    public void run() {
+                        ClientTask task = new ClientTask() {
 
-                        @Override
-                        public boolean run(TaggerClient client) {
-                            Tuser me = client.user().get();
-                            Tlocationtag tag = client.tags().create(data,
-                                    Integer.parseInt(me.getId()));
-                            List<Tlocationtag> added = new ArrayList<Tlocationtag>();
-                            added.add(tag);
-                            ClientState.getState().modifyOwnTags(added,
-                                    new ArrayList<Tlocationtag>());
-                            return true;
-                        }
-                    };
-                    ClientState.getState().doTask(task);
-                }
-            });
+                            @Override
+                            public boolean run(TaggerClient client) {
+                                Tuser me = client.user().get();
+                                Tlocationtag tag = client.tags().create(data,
+                                        Integer.parseInt(me.getId()));
+                                List<Tlocationtag> added = new ArrayList<Tlocationtag>();
+                                added.add(tag);
+                                ClientState.getState().modifyOwnTags(added,
+                                        new ArrayList<Tlocationtag>());
+                                return true;
+                            }
+                        };
+                        ClientState.getState().doTask(task);
+                    }
+                });
+            } else {
+                Toast.makeText(this, R.string.showmap_toast_nonetwork,
+                        Toast.LENGTH_LONG).show();
+            }
         } else {
             Toast.makeText(this, R.string.showmap_toast_nolocation,
                     Toast.LENGTH_LONG).show();

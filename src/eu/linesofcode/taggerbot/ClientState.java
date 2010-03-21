@@ -62,7 +62,7 @@ public class ClientState {
                 return true;
             }
         };
-        return doTask(task);
+        return doTask(task, false);
     }
 
     public void disconnect() {
@@ -193,21 +193,39 @@ public class ClientState {
      *            {@link ClientTask} to execute.
      */
     public boolean doTask(ClientTask task) {
-        boolean result = false;
-        try {
-            result = task.run(client);
-            if (result) {
-                setNetworkState(NetworkState.OK);
-            } else {
+        return doTask(task, true);
+    }
+
+    /**
+     * Executes the provided task on the current client instance. The network
+     * state is set automatically if an error arises.
+     * 
+     * @param task
+     *            {@link ClientTask} to execute.
+     * @param checkConnection
+     *            If true task will fail when no connection is present.
+     */
+    private boolean doTask(ClientTask task, boolean checkConnection) {
+        if (isConnected() || (!checkConnection)) {
+            boolean result = false;
+            try {
+                result = task.run(client);
+                if (result) {
+                    setNetworkState(NetworkState.OK);
+                } else {
+                    setNetworkState(NetworkState.ERROR);
+                }
+            } catch (TaggerClientException e) {
+                if (!e.isNetworkError()) {
+                    Logger.e("Error while communicating with server: " + e);
+                }
                 setNetworkState(NetworkState.ERROR);
             }
-        } catch (TaggerClientException e) {
-            if (!e.isNetworkError()) {
-                Logger.e("Error while communicating with server: " + e);
-            }
-            setNetworkState(NetworkState.ERROR);
+            return result;
+        } else {
+            setNetworkState(NetworkState.OFFLINE);
+            return false;
         }
-        return result;
     }
 
     /**

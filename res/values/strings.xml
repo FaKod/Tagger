@@ -32,5 +32,6 @@
     <string name="showmap_menu_showprefs">Settings</string>
     <string name="showmap_toast_loginfail">Login failed! Please check your login data.</string>
     <string name="showmap_toast_nolocation">Can't set tag without valid GPS location!</string>
+    <string name="showmap_toast_nonetwork">No connection to server! Please check your login data and network connection.</string>
     <string name="statusbar_text">Updating Tagger location...</string>
 </resources>
