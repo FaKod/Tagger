@@ -26,6 +26,9 @@
             android:name=".service.TagUpdateService"></service>
         <uses-library
             android:name="com.google.android.maps" />
+        <activity
+            android:label="@string/createtag_title"
+            android:name=".activity.CreateTag"></activity>
     </application>
     <uses-sdk
         android:minSdkVersion="4" />

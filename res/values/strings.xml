@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TaggerBot</string>
+    <string name="createtag_cancel">Cancel</string>
+    <string name="createtag_create">Create tag</string>
+    <string name="createtag_latitude">Latitude:</string>
+    <string name="createtag_longitude">Longitude:</string>
+    <string name="createtag_title">Create new location tag</string>
     <string name="dialog_button_close">Dismiss</string>
     <string name="dialog_login_text">
         You have not entered any login data.
