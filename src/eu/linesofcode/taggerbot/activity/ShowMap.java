@@ -112,7 +112,6 @@ public class ShowMap extends MapActivity {
                 showDialog(DIALOG_LOGINWARNING);
                 ClientState.getState().setNetworkState(NetworkState.OFFLINE);
             } else {
-                ClientState.getState().setNetworkState(NetworkState.OK);
                 worker.submit(new Runnable() {
 
                     @Override
@@ -477,6 +476,10 @@ public class ShowMap extends MapActivity {
                     case OFFLINE:
                         networkIndicator
                                 .setImageResource(R.drawable.network_offline);
+                        break;
+                    case ACTIVE:
+                        networkIndicator
+                                .setImageResource(R.drawable.network_active);
                         break;
                     default:
                         Logger.e("Unknown network state: " + newState);

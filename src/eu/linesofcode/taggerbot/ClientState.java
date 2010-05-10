@@ -206,6 +206,7 @@ public class ClientState {
      *            If true task will fail when no connection is present.
      */
     private boolean doTask(ClientTask task, boolean checkConnection) {
+        setNetworkState(NetworkState.ACTIVE);
         if (isConnected() || (!checkConnection)) {
             boolean result = false;
             try {
