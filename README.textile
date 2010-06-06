@@ -15,4 +15,7 @@ Mobile App on Android should provide:
 
  I will post the sources and specs the next days...
 
-Who is interested trigger me ;-)
+The Tagger Server should be available here: http://linesofcode.eu:8090/Tagger/V1/user Username:'FaKod' Password:'password'
+I apologise for being slow, its just for testing
+
+Who ever is interested trigger me ;-)
