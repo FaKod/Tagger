@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tagger>
+    <server port="8080" path="Tagger/V1" host="localhost"/>
+</tagger>

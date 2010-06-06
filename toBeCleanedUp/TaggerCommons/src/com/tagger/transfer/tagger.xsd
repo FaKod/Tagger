@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!--
+        ***********************************************************
+        ************ COMPLEX TYPES mainly Dao relevant ************
+        ***********************************************************
+    -->
+
+    <xs:complexType name="tdemand">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="demandType" type="xs:string" minOccurs="0"/>
+            <xs:element name="demandKey" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="demandValue" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tlocation">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="locationType" type="xs:string"/>
+            <xs:element name="latitude" type="xs:double"/>
+            <xs:element name="longitude" type="xs:double"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tuser">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="location" type="tlocation"/>
+            <xs:element name="direction" type="xs:double"/>
+            <xs:element name="locationtags" type="tidArray"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tuserinfo">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="fullname" type="xs:string"/>
+            <xs:element name="address" type="xs:string"/>
+            <xs:element name="email" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tplan">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="observationtype" type="xs:string"/>
+            <xs:element name="routeId" type="xs:string"/>
+            <xs:element name="userId" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tcircleoffriends">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="circleoffriendstype" type="xs:string"/>
+            <xs:element name="users" type="tidArray" minOccurs="1"/>
+            <xs:element name="owningUserId" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tlocationtag">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="infotext" type="xs:string"/>
+            <xs:element name="point" type="tlocation"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tfeaturetoobserve">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="featuretype" type="xs:string"/>
+            <xs:element name="featurepoints" type="tfeaturepoint" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="planId" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tfeaturepoint">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="latitude" type="xs:double"/>
+            <xs:element name="longitude" type="xs:double"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="troute">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="waypoints" type="twaypoint" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="twaypoint">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="point" type="tlocation"/>
+            <xs:element name="infotext" type="xs:string"/>
+            <xs:element name="demandId" type="xs:string"/>
+            <xs:element name="date" type="xs:date"/>
+            <xs:element name="time" type="xs:time"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tidArray">
+		<xs:sequence>
+			<xs:element name="ids" type="xs:string" nillable="false" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+    <xs:complexType name="tidNameArray">
+		<xs:sequence>
+			<xs:element name="ids" type="xs:string" nillable="false" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="names" type="xs:string" nillable="false" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+    <!--
+        ***********************************************************
+        ********** COMPLEX TYPES mainly NOT Dao relevant **********
+        ***********************************************************
+    -->
+
+    <xs:complexType name="tuserlocation">
+        <xs:sequence>
+            <xs:element name="userId" type="xs:string"/>
+            <xs:element name="latitude" type="xs:double"/>
+            <xs:element name="longitude" type="xs:double"/>
+            <xs:element name="direction" type="xs:double"/>
+            <xs:element name="speed" type="xs:double"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        ***********************************************************
+        ***************** ELEMENTS ********************************
+        ***********************************************************
+    -->
+
+    <!-- for adding new user -->
+
+    <xs:element name="E_userAndUserInfo">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="user" type="tuser" minOccurs="1"/>
+                <xs:element name="userInfo" type="tuserinfo" minOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- for updating and retrieving userInfo -->
+
+    <xs:element name="E_user">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="user" type="tuser" minOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- for retrieving user -->
+
+    <xs:element name="E_userInfo">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="userInfo" type="tuserinfo" minOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="E_IdNames">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="idNameArray" type="tidNameArray" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- for retrieving users plans -->
+
+    <xs:element name="E_planIds">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="planIdArray" type="tidArray" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- for retrieving users CircleOfFriends -->
+
+    <xs:element name="E_circleOfFriends">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="circleOfFriends" type="tcircleoffriends" minOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- for retrieving users CircleOfFriends -->
+
+    <xs:element name="E_Ids">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="idArray" type="tidArray" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- for retrieving LocationTag -->
+
+    <xs:element name="E_locationTag">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="locationTag" type="tlocationtag" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!--
+        ***********************************************************
+        **** NON Dao Elemets for retrieving users status **********
+        ***********************************************************
+    -->
+
+    <xs:element name="E_status">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="statusKey" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="statusValue" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="location" type="tlocation" minOccurs="0"/>
+                <xs:element name="demand" type="tdemand" minOccurs="0"/>
+                <xs:element name="htmlText" type="xs:string" minOccurs="0"/>
+                <xs:element name="distance" type="xs:double"/>
+                <xs:element name="azimuth" type="xs:double"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="E_statusReturn">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="statusKey" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="statusValue" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="userlocation" type="tuserlocation" minOccurs="0"  nillable="false" maxOccurs="unbounded" />
+                <xs:element name="location" type="tlocation" minOccurs="0"/>
+                <xs:element name="demand" type="tdemand" minOccurs="0"/>
+                <xs:element name="htmlText" type="xs:string" minOccurs="0"/>
+                <xs:element name="distance" type="xs:double"/>
+                <xs:element name="azimuth" type="xs:double"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
