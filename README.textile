@@ -1,0 +1,18 @@
+This is a small fun project to play around with PostGIS, spartian queries, JPA 2.0, Android, REST and (of course) Scala... 
+
+Tagger server provides:
+* user handling
+* location tags (locations with text)
+* circle of friends (can exchange location tags and own position)
+* REST based interface (with SUNs JAX-RS implementation Jersey) using 
+** PostGIS
+** Postgresql
+** Scala
+
+Mobile App on Android should provide:
+* map with actual position (own and friends)
+* location tags (own and friends)
+
+ I will post the sources and specs the next days...
+
+Who is interested trigger me ;-)
