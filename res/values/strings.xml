@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TaggerBot</string>
+    <string name="showmap_menu_gps">My Location</string>
+    <string name="showmap_menu_login">Login</string>
+</resources>
