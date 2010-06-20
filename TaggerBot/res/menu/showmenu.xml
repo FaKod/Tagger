@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/showprefs"
+        android:title="@string/showmap_menu_showprefs"
+        android:icon="@drawable/android:ic_menu_preferences" />
+    <item
+        android:title="@string/showmap_menu_satellite"
+        android:id="@+id/togglesatellite"
+        android:icon="@drawable/android:ic_menu_mapmode" />
+    <item
+        android:title="@string/showmap_menu_createtag"
+        android:id="@+id/createtag"
+        android:icon="@drawable/android:ic_menu_add" />
+    <item
+        android:title="@string/showmap_menu_exit"
+        android:id="@+id/exit"
+        android:icon="@drawable/android:ic_menu_close_clear_cancel" />
+</menu>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:summary="@string/prefs_login_summary"
+        android:title="@string/prefs_login">
+        <EditTextPreference
+            android:summary="@string/prefs_login_user_summary"
+            android:title="@string/prefs_login_user"
+            android:key="login.user"
+            android:singleLine="true" />
+        <EditTextPreference
+            android:key="login.password"
+            android:summary="@string/prefs_login_password_summary"
+            android:title="@string/prefs_login_password"
+            android:singleLine="true"
+            android:password="true" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:summary="@string/prefs_updater_summary"
+        android:title="@string/prefs_updater">
+        <CheckBoxPreference
+            android:summary="@string/prefs_updater_keepalive_summary"
+            android:title="@string/prefs_updater_keepalive"
+            android:key="@string/prefs_updater_keepalive_key" />
+    </PreferenceCategory>
+</PreferenceScreen>
