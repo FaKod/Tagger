@@ -3,6 +3,7 @@ package eu.linesofcode.taggerbot.activity;
 import java.text.DecimalFormat;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
@@ -11,14 +12,12 @@ import android.widget.EditText;
 import android.widget.Toast;
 import eu.linesofcode.taggerbot.ClientState;
 import eu.linesofcode.taggerbot.R;
-import eu.linesofcode.taggerbot.client.data.ELocationTag;
-import eu.linesofcode.taggerbot.client.data.LocationType;
-import eu.linesofcode.taggerbot.client.data.Tlocation;
-import eu.linesofcode.taggerbot.client.data.Tlocationtag;
 
 public class CreateTag extends Activity {
 
     public static final String EXTRA_LOCATION = "CreateTag.EXTRA_LOCATION";
+    public static final String EXTRA_NAME = "CreateTag.EXTRA_NAME";
+    public static final String EXTRA_TEXT = "CreateTag.EXTRA_TEXT";
 
     private Location location;
     private EditText editName;
@@ -42,6 +41,7 @@ public class CreateTag extends Activity {
 
             @Override
             public void onClick(View arg0) {
+                setResult(RESULT_CANCELED);
                 finish();
             }
         });
@@ -68,42 +68,13 @@ public class CreateTag extends Activity {
     }
 
     private void createTag() {
-        Tlocation tagLocation = new Tlocation();
-        tagLocation.setLocationType(LocationType.LocationTag.toString());
-        tagLocation.setLatitude(location.getLatitude());
-        tagLocation.setLongitude(location.getLongitude());
-
-        Tlocationtag tag = new Tlocationtag();
-        tag.setName(editName.getText().toString());
-        tag.setInfotext(editText.getText().toString());
-        tag.setPoint(tagLocation);
-
-        final ELocationTag data = new ELocationTag();
-        data.setLocationTag(tag);
-
         if (ClientState.getState().isConnected()) {
-            // TODO create tag on server
-//            worker.submit(new Runnable() {
-//
-//                @Override
-//                public void run() {
-//                    ClientTask task = new ClientTask() {
-//
-//                        @Override
-//                        public boolean run(TaggerClient client) {
-//                            Tuser me = client.user().get();
-//                            Tlocationtag tag = client.tags().create(data,
-//                                    Integer.parseInt(me.getId()));
-//                            List<Tlocationtag> added = new ArrayList<Tlocationtag>();
-//                            added.add(tag);
-//                            ClientState.getState().modifyOwnTags(added,
-//                                    new ArrayList<Tlocationtag>());
-//                            return true;
-//                        }
-//                    };
-//                    ClientState.getState().doTask(task);
-//                }
-//            });
+            Intent returnValue = new Intent();
+            returnValue.putExtra(EXTRA_LOCATION, location);
+            returnValue.putExtra(EXTRA_NAME, editName.getText().toString());
+            returnValue.putExtra(EXTRA_TEXT, editText.getText().toString());
+            setResult(RESULT_OK, returnValue);
+            finish();
         } else {
             Toast.makeText(this, R.string.showmap_toast_nonetwork,
                     Toast.LENGTH_LONG).show();

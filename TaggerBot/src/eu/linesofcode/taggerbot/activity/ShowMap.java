@@ -34,7 +34,11 @@ import eu.linesofcode.taggerbot.NetworkState;
 import eu.linesofcode.taggerbot.Prefs;
 import eu.linesofcode.taggerbot.R;
 import eu.linesofcode.taggerbot.client.TaggerClient;
+import eu.linesofcode.taggerbot.client.data.ELocationTag;
+import eu.linesofcode.taggerbot.client.data.LocationType;
+import eu.linesofcode.taggerbot.client.data.Tlocation;
 import eu.linesofcode.taggerbot.client.data.Tlocationtag;
+import eu.linesofcode.taggerbot.client.data.Tuser;
 import eu.linesofcode.taggerbot.map.LocationTagOverlay;
 import eu.linesofcode.taggerbot.map.TagOverlayListener;
 import eu.linesofcode.taggerbot.service.LocationUpdateService;
@@ -44,6 +48,7 @@ public class ShowMap extends MapActivity {
 
     private static final int DIALOG_LOGINWARNING = 100;
     private static final int DIALOG_TAGINFO = 101;
+    private static final int ACTIVITY_CREATETAG = 102;
 
     private ImageView gpsIndicator;
     private ImageView networkIndicator;
@@ -107,7 +112,6 @@ public class ShowMap extends MapActivity {
                 showDialog(DIALOG_LOGINWARNING);
                 ClientState.getState().setNetworkState(NetworkState.OFFLINE);
             } else {
-                ClientState.getState().setNetworkState(NetworkState.OK);
                 worker.submit(new Runnable() {
 
                     @Override
@@ -224,7 +228,7 @@ public class ShowMap extends MapActivity {
         if (currentLocation != null) {
             Intent i = new Intent(this, CreateTag.class);
             i.putExtra(CreateTag.EXTRA_LOCATION, currentLocation);
-            startActivity(i);
+            startActivityForResult(i, ACTIVITY_CREATETAG);
         } else {
             Toast.makeText(this, R.string.showmap_toast_nolocation,
                     Toast.LENGTH_LONG).show();
@@ -349,6 +353,75 @@ public class ShowMap extends MapActivity {
         return new GeoPoint(latitude, longitude);
     }
 
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onActivityResult(int, int,
+     * android.content.Intent)
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+        case ACTIVITY_CREATETAG:
+            if (resultCode == RESULT_OK) {
+                Location location = (Location) data.getExtras().get(
+                        CreateTag.EXTRA_LOCATION);
+                String name = data.getExtras().getString(CreateTag.EXTRA_NAME);
+                String text = data.getExtras().getString(CreateTag.EXTRA_TEXT);
+                createLocationTag(location, name, text);
+            }
+            break;
+        }
+    }
+
+    /**
+     * Creates a location tag with the provided features. The server
+     * communication will be handled asynchronously, so this method returns
+     * immediately.
+     * 
+     * @param location
+     *            Location of tag.
+     * @param name
+     *            Name / title of location tag.
+     * @param text
+     *            Text contents of location tag.
+     */
+    private void createLocationTag(Location location, String name, String text) {
+        Tlocation tagLocation = new Tlocation();
+        tagLocation.setLocationType(LocationType.LocationTag.toString());
+        tagLocation.setLatitude(location.getLatitude());
+        tagLocation.setLongitude(location.getLongitude());
+
+        Tlocationtag tag = new Tlocationtag();
+        tag.setName(name);
+        tag.setInfotext(text);
+        tag.setPoint(tagLocation);
+
+        final ELocationTag data = new ELocationTag();
+        data.setLocationTag(tag);
+        worker.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                ClientTask task = new ClientTask() {
+
+                    @Override
+                    public boolean run(TaggerClient client) {
+                        Tuser me = client.user().get();
+                        Tlocationtag tag = client.tags().create(data,
+                                Integer.parseInt(me.getId()));
+                        List<Tlocationtag> added = new ArrayList<Tlocationtag>();
+                        added.add(tag);
+                        ClientState.getState().modifyOwnTags(added,
+                                new ArrayList<Tlocationtag>());
+                        return true;
+                    }
+                };
+                ClientState.getState().doTask(task);
+            }
+        });
+    }
+
     private class StateListener implements ClientStateListener {
 
         /*
@@ -403,6 +476,10 @@ public class ShowMap extends MapActivity {
                     case OFFLINE:
                         networkIndicator
                                 .setImageResource(R.drawable.network_offline);
+                        break;
+                    case ACTIVE:
+                        networkIndicator
+                                .setImageResource(R.drawable.network_active);
                         break;
                     default:
                         Logger.e("Unknown network state: " + newState);

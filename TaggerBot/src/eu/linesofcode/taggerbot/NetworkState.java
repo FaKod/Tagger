@@ -17,5 +17,9 @@ public enum NetworkState {
     /**
      * Network connection is deliberately down.
      */
-    OFFLINE
+    OFFLINE,
+    /**
+     * The network connection is currently used.
+     */
+    ACTIVE
 }
